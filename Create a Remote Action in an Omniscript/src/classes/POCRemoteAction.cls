@@ -2,7 +2,7 @@
 * @name: POCRemoteAction
 * @description: Test Remote Action to insert an account
 * @author: Ignacio Sarmiento Losada
-* @date: 27/09/2018
+* @date: 05/11/2018
 * @modifiedBy:
 */
 global with sharing class POCRemoteAction implements vlocity_ins.VlocityOpenInterface {
@@ -20,8 +20,7 @@ global with sharing class POCRemoteAction implements vlocity_ins.VlocityOpenInte
         Boolean result = false;
         try {
             setVariables(methodName, options);
-	        outMap.put('teest', accountName);
-            if(isUpdateAccountMethod())
+            if(isInsertAccountMethod())
                 insertAccount();
             result = true;
         }catch(Exception e) {
@@ -42,7 +41,7 @@ global with sharing class POCRemoteAction implements vlocity_ins.VlocityOpenInte
         return optionKey == ACCOUNT_NAME_OPTION;
     }
 	
-	private static Boolean isUpdateAccountMethod(){
+	private static Boolean isInsertAccountMethod(){
 		return methodName == UPDATE_ACCOUNT_METHOD;
 	}
 	
