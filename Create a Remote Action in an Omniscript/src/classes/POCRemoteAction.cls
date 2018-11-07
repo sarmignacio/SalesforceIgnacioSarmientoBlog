@@ -1,8 +1,8 @@
 /*
 * @name: POCRemoteAction
-* @description: Test Remote Action to insert an account
+* @description: Test Remote Action to insert an account record
 * @author: Ignacio Sarmiento Losada
-* @date: 05/11/2018
+* @date: 07/11/2018
 * @modifiedBy:
 */
 global with sharing class POCRemoteAction implements vlocity_ins.VlocityOpenInterface {
@@ -50,9 +50,5 @@ global with sharing class POCRemoteAction implements vlocity_ins.VlocityOpenInte
 			Name = accountName
 		);
 		insert accountToInsert;
-	}
-	
-	private static void setErrorMessage(Map<String,Object> outMap, Exception e){
-		outMap.put(ERROR_MESSAGE_KEY_OUTPUT, e);
 	}
 }
