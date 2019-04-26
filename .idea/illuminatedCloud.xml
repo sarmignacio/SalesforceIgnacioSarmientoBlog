@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="IlluminatedCloudSettings">
+    <option name="connections">
+      <list>
+        <IlluminatedCloudConnection>
+          <option name="connectionName" value="My dev org" />
+          <option name="defaultModuleName" value="project" />
+        </IlluminatedCloudConnection>
+      </list>
+    </option>
+  </component>
+</project>
