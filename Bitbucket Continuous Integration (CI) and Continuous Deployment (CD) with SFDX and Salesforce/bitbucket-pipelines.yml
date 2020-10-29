@@ -1,0 +1,98 @@
+#
+# Bitbucket CD Pipeline to deploy repo using Salesforce DX
+#
+
+######################
+## COMMON FUNCTIONS ##
+######################
+
+##
+## Deployment scripts
+##
+deployPackage: &deployPackage
+  name: Deploy Package To Salesforce
+  script:
+    - echo "********************* Installing code software *********************";
+    # Decrypt server key
+    - openssl enc -aes-256-cbc -md sha256 -salt -d -in assets/server.key.enc -out assets/server.key -k $SERVER_KEY_PASSWORD
+    # Install jq, a json parsing library
+    - apt update && apt -y install jq
+    # Setup SFDX environment variables
+    # https://developer.salesforce.com/docs/atlas.en-us.sfdx_dev.meta/sfdx_dev/sfdx_dev_cli_env_variables.htm
+    - export SALESFORCE_CLI_URL=https://developer.salesforce.com/media/salesforce-cli/sfdx-linux-amd64.tar.xz
+    - export SFDX_AUTOUPDATE_DISABLE=false
+    - export SFDX_USE_GENERIC_UNIX_KEYCHAIN=true
+    - export SFDX_DOMAIN_RETRY=600
+    - export SFDX_LOG_LEVEL=DEBUG
+    # Install Salesforce CLI
+    - mkdir sfdx
+    - wget -qO- $SALESFORCE_CLI_URL | tar xJ -C sfdx --strip-components 1
+    - './sfdx/install'
+    - export PATH=./sfdx/$(pwd):$PATH
+    # Get the branch folder where the package.xml is stored
+    - echo "******** Get the folder where is stored the package.xml for that branch ********";
+    - wholeBranch=$(git branch | sed -n -e 's/^\* \(.*\)/\1/p')
+    - IFS='/' read -ra wholeBranchArray <<< "$wholeBranch"
+    - PACKAGEXML_FOLDER="${wholeBranchArray[${#wholeBranchArray[@]} - 1]}"
+    # Output CLI version and plug-in information
+    - sfdx update
+    - sfdx --version
+    - sfdx plugins --core
+    - echo "********************* Authenticating against Salesforce *********************";
+    - sfdx force:auth:jwt:grant --setdefaultdevhubusername --clientid $SF_CUSTOMER_KEY --jwtkeyfile assets/server.key --username $SF_USERNAME
+    - sfdx force:config:set defaultusername=$SF_USERNAME
+    - echo "********************* Deploying package to Salesforce *********************";
+    - sfdx force:source:deploy -x manifest/$PACKAGEXML_FOLDER/package.xml
+
+##
+## Validation scripts
+##    
+validatePackage: &validatePackage
+  name: Validate Package To Salesforce
+  script:
+    - echo "********************* Installing code software *********************";
+    # Decrypt server key
+    - openssl enc -aes-256-cbc -md sha256 -salt -d -in assets/server.key.enc -out assets/server.key -k $SERVER_KEY_PASSWORD
+    # Install jq, a json parsing library
+    - apt update && apt -y install jq
+    # Setup SFDX environment variables
+    # https://developer.salesforce.com/docs/atlas.en-us.sfdx_dev.meta/sfdx_dev/sfdx_dev_cli_env_variables.htm
+    - export SALESFORCE_CLI_URL=https://developer.salesforce.com/media/salesforce-cli/sfdx-linux-amd64.tar.xz
+    - export SFDX_AUTOUPDATE_DISABLE=false
+    - export SFDX_USE_GENERIC_UNIX_KEYCHAIN=true
+    - export SFDX_DOMAIN_RETRY=600
+    - export SFDX_LOG_LEVEL=DEBUG
+    # Install Salesforce CLI
+    - mkdir sfdx
+    - wget -qO- $SALESFORCE_CLI_URL | tar xJ -C sfdx --strip-components 1
+    - './sfdx/install'
+    - export PATH=./sfdx/$(pwd):$PATH
+    # Get the branch folder where the package.xml is stored
+    - echo "******** Get the folder where is stored the package.xml for that branch ********";
+    - wholeBranch=$(git branch | sed -n -e 's/^\* \(.*\)/\1/p')
+    - IFS='/' read -ra wholeBranchArray <<< "$wholeBranch"
+    - PACKAGEXML_FOLDER="${wholeBranchArray[${#wholeBranchArray[@]} - 1]}"
+    # Output CLI version and plug-in information
+    - sfdx update
+    - sfdx --version
+    - sfdx plugins --core
+    - echo "********************* Authenticating against Salesforce *********************";
+    - sfdx force:auth:jwt:grant --setdefaultdevhubusername --clientid $SF_CUSTOMER_KEY --jwtkeyfile assets/server.key --username $SF_USERNAME
+    - sfdx force:config:set defaultusername=$SF_USERNAME
+    - echo "********************* Validating package in Salesforce *********************";
+    - sfdx force:source:deploy -x manifest/$PACKAGEXML_FOLDER/package.xml --checkonly --testlevel RunLocalTests
+
+######################
+## COMMON FUNCTIONS ##
+######################
+
+pipelines:
+  custom:
+    testDev_PackageDeployment:
+      - step:
+          <<: *deployPackage
+          deployment: testDev
+    DevDonnie_PackageValidation:
+      - step:
+          <<: *validatePackage
+          deployment: testDev
