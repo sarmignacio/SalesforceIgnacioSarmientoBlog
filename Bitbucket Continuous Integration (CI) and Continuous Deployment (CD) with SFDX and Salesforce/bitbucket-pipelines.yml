@@ -92,7 +92,7 @@ pipelines:
       - step:
           <<: *deployPackage
           deployment: testDev
-    DevDonnie_PackageValidation:
+    testDev_PackageValidation:
       - step:
           <<: *validatePackage
           deployment: testDev
